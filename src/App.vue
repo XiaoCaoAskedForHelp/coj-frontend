@@ -1,30 +1,43 @@
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
-  <router-view />
+  <div id="app">
+    <BasicLayout />
+  </div>
 </template>
 
 <style>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-
-nav {
-  padding: 30px;
-}
-
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-nav a.router-link-exact-active {
-  color: #42b983;
 }
 </style>
+<script setup lang="ts">
+import BasicLayout from "@/layouts/BasicLayout.vue";
+import { useRouter } from "vue-router";
+import { useStore } from "vuex";
+import { onMounted } from "vue";
+
+/**
+ * 全局初始化函数，有全局单词调用的代码，都可以写到这里
+ */
+const doInit = () => {
+  console.log("欢迎来到我的项目！");
+};
+
+onMounted(() => {
+  doInit();
+});
+
+const router = useRouter();
+const store = useStore();
+router.beforeEach((to, from, next) => {
+  // 仅管理员可见，判断当前用户是有权限
+  if (to.meta?.access === "canAdmin") {
+    if (store.state.user?.loginUser?.role !== "admin") {
+      next({ path: "/noAuth" });
+    } else {
+      next();
+    }
+  } else {
+    next();
+  }
+  // console.log("beforeEach", to, from);
+});
+</script>
