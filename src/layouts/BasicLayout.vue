@@ -34,7 +34,6 @@ import GlobalHeader from "@/components/GlobalHeader.vue";
 }
 
 #basicLayout .footer {
-  background-color: green;
   padding: 16px;
   position: absolute;
   bottom: 0;
