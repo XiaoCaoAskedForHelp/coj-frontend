@@ -27,20 +27,27 @@
       </a-menu>
     </a-col>
     <a-col flex="100px">
-      <div>
-        {{ store.state.user?.loginUser?.userName ?? "未登录" }}
-      </div>
+      <a-space>
+        <a-link
+          v-if="store.state.user?.loginUser?.userName === '未登录'"
+          href="/user/login"
+        >
+          未登录
+        </a-link>
+        <div v-if="store.state.user?.loginUser?.userName !== '未登录'">
+          {{ store.state.user?.loginUser?.userName }}
+        </div>
+      </a-space>
     </a-col>
   </a-row>
 </template>
 
 <script setup lang="ts">
 import { routes } from "@/router/routes";
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 import { computed, ref } from "vue";
 import { useStore } from "vuex";
 import checkAccess from "@/access/checkAccess";
-import ACCESS_ENUM from "@/access/accessEnum";
 
 const router = useRouter();
 const store = useStore();

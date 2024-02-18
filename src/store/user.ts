@@ -1,11 +1,9 @@
-import { ActionContext } from "vuex";
 import ACCESS_ENUM from "@/access/accessEnum";
 import { UserControllerService } from "../../generated";
 
-interface State {
-  loginUser: {
-    username: string;
-  };
+// 定义State类型
+export interface UserState {
+  loginUser: any;
 }
 
 const state = () => ({
@@ -21,7 +19,7 @@ const getters = {};
 const actions = {
   // 从后端获取登录用户信息
   async getLoginUser(
-    { commit, state }: ActionContext<State, any>,
+    { commit, state }: { commit: any; state: UserState },
     payload: any
   ) {
     const res = await UserControllerService.getLoginUserUsingGet();
@@ -41,7 +39,7 @@ const actions = {
 };
 // mutations
 const mutations = {
-  updateUser(state: any, user: any) {
+  updateUser(state: UserState, user: any) {
     state.loginUser = user;
   },
 };

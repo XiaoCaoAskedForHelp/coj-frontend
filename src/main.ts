@@ -6,6 +6,7 @@ import router from "./router";
 import store from "./store";
 import "@/plugins/axios"; // 直接定义aixos请求库的全局参数，比如全局请求响应拦截器
 import "@/access/index";
+import "bytemd/dist/index.css";
 
 const app = createApp(App);
 
