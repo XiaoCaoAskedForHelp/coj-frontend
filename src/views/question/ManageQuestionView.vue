@@ -7,10 +7,14 @@
       :data="dataList"
       :pagination="{
         showTotal: true,
-        total: total,
+        total,
         pageSize: searchParams.pageSize,
         current: searchParams.current,
+        pageSizeOptions: [2, 5, 10, 20],
+        showPageSize: true,
       }"
+      @page-change="onPageChange($event)"
+      @page-size-change="onPageSizeChange($event)"
     >
       <template #optional="{ record }">
         <a-space>
@@ -23,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watchEffect } from "vue";
 import message from "@arco-design/web-vue/es/message";
 import { useRouter } from "vue-router";
 import { QuestionControllerService } from "../../../generated/services/QuestionControllerService";
@@ -37,6 +41,10 @@ const columns = [
   {
     title: "标题",
     dataIndex: "title",
+  },
+  {
+    title: "内容",
+    dataIndex: "content",
   },
   {
     title: "标签",
@@ -96,6 +104,10 @@ const loadData = async () => {
   }
 };
 
+watchEffect(() => {
+  loadData();
+});
+
 onMounted(() => {
   loadData();
 });
@@ -121,6 +133,23 @@ const doDelete = async (question: Question) => {
   } else {
     message.error("删除失败！" + res.message);
   }
+};
+
+const onPageChange = (page: number) => {
+  // 两种方式都可以，一种是直接修改searchParams.value，一种是重新赋值触发watchEffect，第二种方式更推荐
+  // searchParams.value.current = page;
+  // loadData();
+  searchParams.value = {
+    ...searchParams.value,
+    current: page,
+  };
+};
+
+const onPageSizeChange = (pageSize: number) => {
+  searchParams.value = {
+    ...searchParams.value,
+    pageSize,
+  };
 };
 </script>
 

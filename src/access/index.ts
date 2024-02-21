@@ -9,9 +9,9 @@ router.beforeEach(async (to, from, next) => {
   // 如果之前未登录过，自动登录
   if (!loginUser || !loginUser.userRole) {
     await store.dispatch("user/getLoginUser");
+    // 更新登录用户信息
+    loginUser = store.state.user.loginUser;
   }
-  // 更新登录用户信息
-  loginUser = store.state.user.loginUser;
   const needAccess = (to.meta?.access as string) ?? ACCESS_ENUM.NOT_LOGIN;
   // 如果用户访问的页面不需要登录，不需要跳转到登录页
   if (needAccess === ACCESS_ENUM.NOT_LOGIN) {
