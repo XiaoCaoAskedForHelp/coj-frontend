@@ -2,16 +2,31 @@
   <div id="questionSubmitView">
     <h2>题目管理</h2>
     <a-form :model="searchParams" layout="inline" style="min-width: 240px">
-      <a-form-item field="title" label="题目名称">
-        <a-input v-model="searchParams.title" placeholder="请输入题目名称..." />
+      <a-form-item field="language" label="编程语言">
+        <a-select
+          :style="{ width: '150px' }"
+          placeholder="选择编程语言"
+          v-model="searchParams.language"
+          allow-clear
+        >
+          <a-option>java</a-option>
+          <a-option>cpp</a-option>
+          <a-option>go</a-option>
+          <a-option>csharp</a-option>
+          <a-option>html</a-option>
+        </a-select>
       </a-form-item>
-      <a-form-item field="tags" label="标签" style="min-width: 240px">
-        <a-input-tag v-model="searchParams.tags" placeholder="请输入标签..." />
+      <a-form-item field="questionId" label="题目ID">
+        <a-input
+          v-model="searchParams.questionId"
+          placeholder="请输入题目ID..."
+        />
       </a-form-item>
       <a-form-item>
         <a-button type="primary" @click="doSearch()">Submit</a-button>
       </a-form-item>
     </a-form>
+    <!--{{ searchParams }}-->
     <a-divider size="0" />
     <a-table
       :ref="tableRef"
@@ -28,29 +43,14 @@
       @page-change="onPageChange($event)"
       @page-size-change="onPageSizeChange($event)"
     >
-      <template #tags="{ record }">
-        <a-space wrap>
-          <a-tag v-for="(tag, index) of record.tags" :key="index" color="green">
-            {{ tag }}
-          </a-tag>
-        </a-space>
+      <template #judgeInfo="{ record }">
+        {{ record.judgeInfo }}
       </template>
-      <template #acceptedRate="{ record }">
-        {{
-          `${record.submitNum ? record.acceptNum / record.submitNum : "0"}% (${
-            record.acceptNum
-          } / ${record.submitNum})`
-        }}
+      <template #status="{ record }">
+        {{ record.status }}
       </template>
-      <template #updateTime="{ record }">
-        {{ moment(record.updateTime).format("YYYY-MM-DD") }}
-      </template>
-      <template #optional="{ record }">
-        <a-space>
-          <a-button type="primary" @click="toQuestionPage(record)"
-            >做题
-          </a-button>
-        </a-space>
+      <template #submitTime="{ record }">
+        {{ moment(record.createTime).format("YYYY-MM-DD") }}
       </template>
     </a-table>
   </div>
@@ -59,56 +59,68 @@
 <script setup lang="ts">
 import { onMounted, ref, watchEffect } from "vue";
 import message from "@arco-design/web-vue/es/message";
-import { useRouter } from "vue-router";
-import { QuestionControllerService } from "../../../generated/services/QuestionControllerService";
-import { Question } from "../../../generated/models/Question";
 import moment from "moment";
-import { QuestionQueryRequest } from "../../../generated/models/QuestionQueryRequest";
+import { QuestionSubmitControllerService } from "../../../generated/services/QuestionSubmitControllerService";
+import { QuestionSubmitQueryRequest } from "../../../generated/models/QuestionSubmitQueryRequest";
 
 const columns = [
   {
-    title: "题号",
+    title: "提交ID",
     dataIndex: "id",
   },
   {
-    title: "题目名称",
-    dataIndex: "title",
+    title: "编程语言",
+    dataIndex: "language",
   },
   {
-    title: "标签",
-    slotName: "tags",
+    title: "判题信息",
+    slotName: "judgeInfo",
   },
   {
-    title: "通过率",
-    slotName: "acceptedRate",
+    title: "判题状态",
+    slotName: "status",
   },
   {
-    title: "更新时间",
-    slotName: "updateTime",
+    title: "题目ID",
+    dataIndex: "questionId",
   },
   {
-    title: "操作",
-    slotName: "optional",
+    title: "提交者ID",
+    dataIndex: "userId",
+  },
+  {
+    title: "提交时间",
+    slotName: "submitTime",
   },
 ];
 const dataList = ref([]);
 const total = ref(0);
 const tableRef = ref();
 
-const searchParams = ref<QuestionQueryRequest>({
+const searchParams = ref<QuestionSubmitQueryRequest>({
   current: 1,
   pageSize: 10,
-  title: "",
-  tags: [],
+  language: undefined,
+  questionId: undefined,
+  sortField: "createTime",
+  sortOrder: "descend",
 });
 
 const loadData = async () => {
-  const res = await QuestionControllerService.listQuestionVoByPageUsingPost(
-    searchParams.value
-  );
+  const res =
+    await QuestionSubmitControllerService.listQuestionSubmitVoByPageUsingPost(
+      searchParams.value
+    );
+  // 这种方式会一直触发请求，可能是因为watchEffect监听
+  // const res =
+  //   await QuestionSubmitControllerService.listQuestionSubmitVoByPageUsingPost({
+  //     ...searchParams.value,
+  //     sortField: "createTime",
+  //     sortOrder: "descend",
+  //   });
   if (res.code === 0) {
     dataList.value = res.data.records;
-    total.value = res.data.total;
+    total.value = parseInt(res.data.total);
   } else {
     message.error("获取题目列表失败！" + res.message);
   }
@@ -121,15 +133,6 @@ watchEffect(() => {
 onMounted(() => {
   loadData();
 });
-
-const router = useRouter();
-
-// 跳转到题目页面
-const toQuestionPage = (question: Question) => {
-  router.push({
-    path: `/question/view/${question.id}`,
-  });
-};
 
 const onPageChange = (page: number) => {
   // 两种方式都可以，一种是直接修改searchParams.value，一种是重新赋值触发watchEffect，第二种方式更推荐
